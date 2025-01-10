@@ -1,0 +1,9 @@
+site_name: Data Trovo Docs
+
+nav:
+  - Home: index.md
+  - Developers:
+    - Introduction: developer.md
+    - Git: dev-docs/git.md
+    - Direct SQL: dev-docs/direct-sql.md
+  - Business Teams: business.md
