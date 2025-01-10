@@ -1,27 +1,30 @@
 # Git Connection
 
-Integrating Git with DataTrovo allows you to execute your scripts directly from your Git repository. This is useful for both managing your scripts through version control and to integrate DataTrovo with your teams existing workflows.
+Integrating Git with DataTrovo allows you to execute your scripts directly from a Git repository. This is beneficial for managing scripts via version control and aligning DataTrovo with your team’s existing workflows.
 
-Utilize [**synctatic sugar**](#Synctatic Sugar) to define your queries and let DataTrovo index the metadata allowing your team complete flexibility to make their scripts searchable, executable, and shareable with the rest of the team.
+Use **syntactic sugar** to define your queries and let DataTrovo index the metadata, giving your team the flexibility to make scripts searchable, executable, and shareable across the organization.
 
-Utilize [**Docker**](#Docker) to create a custom execution environment for your scripts. This allows your team to define and manage dependencies and configuration for your scripts.
+Leverage **Docker** to create a custom execution environment for your scripts. This allows your team to define and manage dependencies and configurations for any project.
 
-DataTrovo currently supports the following Git repositories:
+Currently, DataTrovo supports the following Git repositories:
 
 1. GitHub
 
-## Set up Database Connections
-Steps to connect to your Git repository:
+## Set Up Git Connections
 
-1. Navigate to `Settings` > `Secrets` > `+` to add all the required environment variables required by your scripts. **A symetric key is used for environment variable encryption.**
-2. Navigate to `Settings` > `Connections` > `+` to add a new connection.
-3. Select one of the connections from the list above.
-4. Fill in the required connection fields. **A symetric key is used for PAT Key encryption.**
-5. DataTrovo will test the connection and save the connection details.
+To connect to your Git repository in DataTrovo:
 
-## Synctatic Sugar
+1. Go to **Settings** > **Secrets** > **+** to add all required environment variables for your scripts.  
+   *A symmetric key is used to encrypt environment variables.*  
+2. Go to **Settings** > **Connections** > **+** to create a new connection.  
+3. Select one of the supported repository providers.  
+4. Fill in the required connection details.  
+   *A symmetric key is used to encrypt PAT keys.*  
+5. DataTrovo will test and save the connection.
 
-Synctatic sugar allows DataTrovo to index the metadata of your scripts. You can use this to populate the `Title`, `Description` and arbitrary `Tags` for your scripts.
+## Syntactic Sugar
+
+“Syntactic sugar” in DataTrovo allows you to embed metadata in your scripts so the platform can automatically index it. This metadata can include:
 
 The following comment structure is used for the respective languages:
 
@@ -29,28 +32,23 @@ The following comment structure is used for the respective languages:
 - R: `#>`
 - SQL: `-->`
 
-**Required** Metadata:
+### Required Metadata
+- **title** — The script’s title as displayed in DataTrovo.  
+- **description** — A brief script description displayed in DataTrovo.  
+- **run** — The command used to run the script. You can use `{file_path}` to reference the script.  
+- **output** — The name of the output file generated in the project’s root directory.
 
-- `title` - The title of the script to be displayed in DataTrovo.
-- `description` - A brief description of the script. Also to be displayed in DataTrovo.
-- `run` - The command to run the script. A `{file_path}` variable is available to reference the script.
-- `output` - The output file name of the script in the project's root directory.
+### Optional Metadata
+- **environment** — A list of environment variables that the script requires.
 
-**Optional** Metadata:
+### Additional Metadata as Tags
+Any additional metadata beyond the above required fields is indexed as tags. This can include authors, dates, columns, or any other information. These tags are searchable and visible in the DataTrovo UI.
 
-If your script requires any environment variables, you can define them in the script using the following syntax:
+### Examples
 
-- `environment` - A list of environment variables required by the script.
+**.SQL Example**:
 
-**Other** Metadata:
-
-Any other metadata provided other than the supported and reserved names above will be indexed as Tags. This is other metadata that is searchable and visible on the DataTrovo UI. This can be used to record authors, dates, columns, or any other metadata associated with the script.
-
-**Examples**:
-
-`.SQL` Example:
-
-```
+```sql
 --> title: Top 100 facilities
 --> description: Download the top 100 facilities
 --> environment: [PGHOST, PGPORT, PGDATABASE, PGUSER, PGPASSWORD]
@@ -60,9 +58,9 @@ Any other metadata provided other than the supported and reserved names above wi
 --> author: [John Doe]
 ```
 
-`.R` Example:
+**.R Example**:
 
-```
+```r
 #> title: R Top 100 facilities
 #> description: Download the top 100 facilities using R
 #> author: [R Master]
@@ -74,28 +72,31 @@ Any other metadata provided other than the supported and reserved names above wi
 
 ## Docker
 
-Every repository needs **one** Dockerfile in the root directory. This Dockerfile will be used to build the execution environment for your scripts. The Dockerfile should contain all the dependencies the the script `Run` command is executed within this context.
+Example Files:
 
-The only **requirement** for the dockerfile is to set the working directory to `/app`. This is because the script is volume mapped into the `/app` directory on container startup.
+- [SQL Example](https://github.com/DataTrovo/postgres-example/blob/main/Dockerfile)
+- [R Example](https://github.com/DataTrovo/r-example/blob/main/Dockerfile)
 
-The dockerfile is rebuilt within DataTrovo whenever the dockerfile is updated. Allowing scripts to be changed without incuring the exepense of rebuilding the docker image. This is achieved through volume mapping the script into the container. However, this introduces a few limitations you need to be aware of when writing the dockerfile.
+Each repository should include **one** Dockerfile in the root directory. This Dockerfile is used to build the execution environment for your scripts. The primary requirement is that the working directory be set to `/app`, as DataTrovo mounts your scripts into `/app` when the container starts.
 
-If package dependencies are installed within the root directory of the project, they will be lost. One example of this is the `renv` package manager for `R`. This is because the volume mapping will overwrite the dependencies within the script.
+DataTrovo automatically rebuilds the Docker image whenever the Dockerfile changes, allowing you to modify scripts without incurring the overhead of a full image rebuild every time. This is achieved by volume-mounting the scripts into the container. However, this approach can cause certain limitations. For example, any dependencies installed in the project’s root directory will be overwritten when the scripts are volume-mounted.
 
-This limitation is resolved by building the dependencies within a subdirectory of the project. Finally copy the script into the project directly on container startup.
+This limitation can be avoided by installing dependencies in a temporary directory and copying the dependencies into the working directory at container startup.
 
 **Example Operations in the Dockerfile**:
 
 ```
-# Set the working directory to /opt/renv, a temporary working directory
+# Use a temporary directory for installing dependencies
 WORKDIR /opt/app
 
-# Install packages from a lockfile
+# Install packages (e.g., using renv for R)
 RUN Rscript -e "renv::restore()"
 
 # Reset the working directory to /app
 WORKDIR /app
 
-# On container startup, copy the script into the working directory
+# On container startup, copy the script into /app
 ENTRYPOINT ["sh", "-c", "cp -r /opt/app/renv/library/ /app/renv/ && exec \"$@\"", "--"]
 ```
+
+In this example, dependencies are installed in a subdirectory `(/opt/app)`, then the script is copied over at container startup, avoiding conflicts due to volume mounting.

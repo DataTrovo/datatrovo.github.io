@@ -1,21 +1,22 @@
 # Direct Connection
 
-DataTrovo currently supports the following direct connection data sources:
+DataTrovo currently supports direct connections to the following data sources:
 
 1. PostgreSQL
 
-Follow the following steps to connect to your data source:
+### Set Up Database Connections
 
-## Set up Database Connections
-1. Navigate to `Settings` > `Connections` > `+` to add a new connection.
-2. Select one of the databases from the list above.
-3. Fill in the required connection fields. **A symetric key is used for password encryption.**
-4. Click `Save`. DataTrovo will test the connection and save the connection details.
+1. Go to **Settings** > **Connections** > **+** to add a new connection.  
+2. Select one of the supported databases.  
+3. Complete the required connection fields.  
+   *A symmetric key is used to encrypt passwords.*  
+4. Click **Save**. DataTrovo will test and save the connection.
 
-## Write Queries
-1. Click on `New Query`
-2. Provide a `Title` and `Description` for the query. From the dropdown, select the connection you created.
-3. Write your query in the editor.
-4. Click `Save`.
+### Write Queries
 
-The query will appear on the homepage, click the `Download` button to execute the query or the `Edit` button to make changes.
+1. Click **New Query**.  
+2. Enter a **Title** and **Description** for the query. From the dropdown, choose the connection you created.  
+3. Write your query in the editor.  
+4. Click **Save**.
+
+Once saved, the query will appear on the homepage. You can click **Download** to run it and retrieve the results, or **Edit** to modify it.
