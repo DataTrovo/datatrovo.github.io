@@ -1,9 +1,0 @@
-site_name: DataTrovo Documentation
-
-nav:
-  - Home: index.md
-  - Developers:
-    - Introduction: developer.md
-    - Git: dev-docs/git.md
-    - Direct SQL: dev-docs/direct-sql.md
-  - Business Teams: business.md
